@@ -2,22 +2,24 @@
 pragma solidity ^0.8.0;
 pragma abicoder v2;
 
-import "@uniswap/v3-staker/contracts/interfaces/IUniswapV3Staker.sol";
-import "@uniswap/v3-staker/contracts/libraries/IncentiveId.sol";
-import "@uniswap/v3-staker/contracts/libraries/NFTPositionInfo.sol";
-import "@uniswap/v3-staker/contracts/libraries/TransferHelperExtended.sol";
 import "@uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol";
 import "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
 import "@uniswap/v3-core/contracts/interfaces/IERC20Minimal.sol";
-import "@uniswap/v3-periphery/contracts/base/Multicall.sol";
 
 import {RewardMath} from "../utils/RewardMath.sol";
 import {INonfungiblePositionManager} from "../interfaces/INonfungiblePositionManager.sol";
-import {IGauge} from "../interfaces/IGauge.sol";
+import {IGaugeV2UniV3} from "../interfaces/IGaugeV2UniV3.sol";
 import {IRegistry} from "../interfaces/IRegistry.sol";
+import "../utils/NFTPositionInfo.sol";
+import "../utils/Multicall.sol";
+import "../utils/TransferHelperExtended.sol";
+import "../interfaces/IUniswapV3Staker.sol";
+import "../utils/IncentiveId.sol";
+import {INFTStaker} from "../interfaces/INFTStaker.sol";
+import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 
 /// @title Uniswap V3 canonical staking interface
-contract BaseGaugeV2UniV3 is IGauge, IUniswapV3Staker, Multicall {
+contract BaseGaugeV2UniV3 is IGaugeV2UniV3, IUniswapV3Staker, Multicall {
     IRegistry public immutable override registry;
 
     /// @notice Represents a staking incentive
@@ -40,6 +42,7 @@ contract BaseGaugeV2UniV3 is IGauge, IUniswapV3Staker, Multicall {
         uint160 secondsPerLiquidityInsideInitialX128;
         uint96 liquidityNoOverflow;
         uint128 liquidityIfOverflow;
+        uint128 nonDerivedLiquidity;
     }
 
     /// @inheritdoc IUniswapV3Staker
@@ -62,6 +65,8 @@ contract BaseGaugeV2UniV3 is IGauge, IUniswapV3Staker, Multicall {
 
     /// @dev stakes[tokenId][incentiveHash] => Stake
     mapping(uint256 => mapping(bytes32 => Stake)) private _stakes;
+
+    uint256 public totalSupply;
 
     /// @inheritdoc IUniswapV3Staker
     function stakes(uint256 tokenId, bytes32 incentiveId)
@@ -321,6 +326,8 @@ contract BaseGaugeV2UniV3 is IGauge, IUniswapV3Staker, Multicall {
             uint128 liquidity
         ) = stakes(tokenId, incentiveId);
 
+        totalSupply -= uint256(_stakes[tokenId][incentiveId].nonDerivedLiquidity);
+
         require(
             liquidity != 0,
             "UniswapV3Staker::unstakeToken: stake does not exist"
@@ -448,7 +455,8 @@ contract BaseGaugeV2UniV3 is IGauge, IUniswapV3Staker, Multicall {
                 tokenId
             );
 
-        uint256 liquidity = derivedLiquidity(_liquidity);
+        totalSupply += uint256(_liquidity);
+        uint128 liquidity = uint128(derivedLiquidity(_liquidity, deposits[tokenId].owner));
 
         require(
             pool == key.pool,
@@ -469,7 +477,8 @@ contract BaseGaugeV2UniV3 is IGauge, IUniswapV3Staker, Multicall {
             _stakes[tokenId][incentiveId] = Stake({
                 secondsPerLiquidityInsideInitialX128: secondsPerLiquidityInsideX128,
                 liquidityNoOverflow: type(uint96).max,
-                liquidityIfOverflow: liquidity
+                liquidityIfOverflow: liquidity,
+                nonDerivedLiquidity: _liquidity
             });
         } else {
             Stake storage stake = _stakes[tokenId][incentiveId];

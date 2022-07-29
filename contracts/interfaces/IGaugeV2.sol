@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 
 import {IGauge} from "./IGauge.sol";
 
-interface IGaugeV2 {
+interface IGaugeV2 is IGauge {
     /// @notice A checkpoint for marking balance
     struct Checkpoint {
         uint256 timestamp;

@@ -8,10 +8,10 @@ import {IRegistry} from "../interfaces/IRegistry.sol";
 import {IGaugeVoter} from "../interfaces/IGaugeVoter.sol";
 import {INFTLocker} from "../interfaces/INFTLocker.sol";
 import {IBribe} from "../interfaces/IBribe.sol";
-import {IGauge} from "../interfaces/IGauge.sol";
+import {IGaugeV1} from "../interfaces/IGaugeV1.sol";
 
 // Gauges are used to incentivize pools, they emit reward tokens over 7 days for staked LP tokens
-contract BaseGaugeV1 is IGauge {
+contract BaseGaugeV1 is IGaugeV1 {
     IRegistry public immutable override registry;
     address public immutable stake; // the LP token that needs to be staked for rewards
 

@@ -9,7 +9,8 @@ import "@uniswap/v3-periphery/contracts/interfaces/IPoolInitializer.sol";
 import "@uniswap/v3-periphery/contracts/interfaces/IERC721Permit.sol";
 import "@uniswap/v3-periphery/contracts/interfaces/IPeripheryPayments.sol";
 import "@uniswap/v3-periphery/contracts/interfaces/IPeripheryImmutableState.sol";
-import "@uniswap/v3-periphery/contracts/libraries/PoolAddress.sol";
+
+import "../utils/PoolAddress.sol";
 
 /// @title Non-fungible token for positions
 /// @notice Wraps Uniswap V3 positions in a non-fungible token interface which allows for them to be transferred

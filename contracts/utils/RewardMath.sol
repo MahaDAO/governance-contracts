@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "@uniswap/v3-core/contracts/libraries/FullMath.sol";
+import "./FullMath.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
 
 /// @title Math for computing rewards
